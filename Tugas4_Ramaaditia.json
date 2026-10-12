@@ -1,0 +1,290 @@
+{
+  "name": "Tugas4_Ramaaditia",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 15
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        0
+      ],
+      "id": "7df14a49-d15f-46db-9a6f-55aa927a003d",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1w-JW56LQanbbQw1tgezQlzlFm3jqXn280y7FBl8zyMQ",
+          "mode": "list",
+          "cachedResultName": "Auto Posting Scheduler - Rama Aditia",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1w-JW56LQanbbQw1tgezQlzlFm3jqXn280y7FBl8zyMQ/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1w-JW56LQanbbQw1tgezQlzlFm3jqXn280y7FBl8zyMQ/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        224,
+        0
+      ],
+      "id": "a5dcddea-bb8b-4221-bdc1-ddef857d638e",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "xner5MelW9BzTgvS",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst now = $now.setZone('Asia/Jakarta');\n\nreturn $input.all().filter(item => {\n  const row = item.json;\n\n  if (String(row.Status ?? '').trim().toLowerCase() !== 'pending') {\n    return false;\n  }\n\n  const date = String(row['Scheduled Date'] ?? '').trim();\n  const time = String(row['Scheduled Time'] ?? '').trim();\n\n  const [day, month, year] = date.split('/').map(Number);\n  const [hour, minute, second = 0] = time.split(':').map(Number);\n\n  if (\n    !day || !month || !year ||\n    hour < 0 || hour > 23 ||\n    minute < 0 || minute > 59 ||\n    second < 0 || second > 59\n  ) {\n    return false;\n  }\n\n  const scheduled = $now.setZone('Asia/Jakarta').set({\n    year,\n    month,\n    day,\n    hour,\n    minute,\n    second,\n    millisecond: 0\n  });\n\n  if (!scheduled.isValid) return false;\n\n  return scheduled.toMillis() <= now.toMillis();\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        0
+      ],
+      "id": "6e9e2e50-9266-42f7-aeed-affdcb709d2a",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "chatId": "1959236704",
+        "text": "={{ $json.Content }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        672,
+        0
+      ],
+      "id": "b6f74dd5-7557-4c95-bc88-e8b05e2e1978",
+      "name": "Send a text message",
+      "webhookId": "17ac8685-9a24-402e-b758-a461732c0ca8",
+      "credentials": {
+        "telegramApi": {
+          "id": "P3lTDzfTKWC4e1Ea",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "6c8cdf6b-e53b-4eba-abde-50fe87238df7",
+              "name": "row_number",
+              "value": "={{ $('Code in JavaScript').item.json.row_number }}",
+              "type": "string"
+            },
+            {
+              "id": "aeae7a11-b248-4a85-9be4-628ddd265b60",
+              "name": "Status",
+              "value": "Published",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        896,
+        0
+      ],
+      "id": "e7df9f3f-28c2-4045-958f-fc0f561cf86e",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1w-JW56LQanbbQw1tgezQlzlFm3jqXn280y7FBl8zyMQ",
+          "mode": "list",
+          "cachedResultName": "Auto Posting Scheduler - Rama Aditia",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1w-JW56LQanbbQw1tgezQlzlFm3jqXn280y7FBl8zyMQ/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1w-JW56LQanbbQw1tgezQlzlFm3jqXn280y7FBl8zyMQ/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "ID": "={{ $('Code in JavaScript').item.json.ID }}",
+            "Status": "Published"
+          },
+          "matchingColumns": [
+            "ID"
+          ],
+          "schema": [
+            {
+              "id": "ID",
+              "displayName": "ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Content",
+              "displayName": "Content",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Scheduled Date",
+              "displayName": "Scheduled Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Scheduled Time",
+              "displayName": "Scheduled Time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1120,
+        0
+      ],
+      "id": "b335160f-e7a3-4219-a08b-89b5071fe271",
+      "name": "Append or update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "xner5MelW9BzTgvS",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Append or update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "db4d21b1-3c59-48cb-812b-2188d633258b",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "dc96f10ae7dc95d3c138575ba243a0a167923dbcb524841d451aadf9135d5fb3"
+  },
+  "nodeGroups": [],
+  "id": "8LZtysvCqiwoC05v",
+  "tags": []
+}
